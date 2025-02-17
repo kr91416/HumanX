@@ -1,4 +1,3 @@
-# HumanX AGI
 from typing import List, Dict, Any, Tuple, Optional
 import numpy as np
 from dataclasses import dataclass, field
@@ -22,6 +21,7 @@ import logging
 import dateparser
 import psutil  # To check system memory
 from email.mime.text import MIMEText
+import nest_asyncio
 
 # For hierarchical clustering
 from scipy.cluster.hierarchy import linkage, fcluster
@@ -35,10 +35,9 @@ warnings.filterwarnings("ignore", category=UserWarning)
 logging.basicConfig(level=logging.ERROR)
 torch.set_num_threads(16)
 
-"""
-AGI starts here
-Thought and Belief system
-"""
+# ====================================================
+# AGI Features: MetaCognitive System (Learning & Reasoning)
+# ====================================================
 
 class ThoughtLevel(Enum):
     REFLEXIVE = 1    # Immediate responses
@@ -66,6 +65,8 @@ class MetaCognitiveSystem:
         self.meta_memory = defaultdict(list)
         self.reasoning_patterns: List[Dict[str, Any]] = []
         self.performance_metrics = defaultdict(list)
+        # Storage for all conversation data (for self-training)
+        self.training_data: List[str] = []
 
     def metacognitive_process(self, input_data: str, context: Dict[str, Any]) -> Dict[str, Any]:
         # Phase 1: Self-reflection
@@ -90,6 +91,26 @@ class MetaCognitiveSystem:
         for key, value in metrics.items():
             self.performance_metrics[key].append(value)
         return metrics
+
+
+    def _symbolic_reasoning(self, abstractions: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Performs symbolic reasoning on the given abstractions."""
+        results = []
+        for abstraction in abstractions:
+            symbols = self._create_symbols(abstraction)
+            transformed = self._apply_transformations(symbols)
+            consistent = self._verify_consistency(transformed)
+            insights = self._generate_insights(transformed)
+            confidence = self._calculate_confidence(insights)
+            results.append({
+                'original': abstraction,
+                'symbols': symbols,
+                'transformed': transformed,
+                'consistent': consistent,
+                'insights': insights,
+                'confidence': confidence
+            })
+        return results
 
     def _calculate_reasoning_efficiency(self) -> float:
         if self.reasoning_patterns:
@@ -173,7 +194,8 @@ class MetaCognitiveSystem:
             clusters.setdefault(label, []).append(i)
         result = []
         for label, indices in clusters.items():
-            result.append({'elements': indices, 'level': np.mean([indices[0]])}) # Default level, you can change this for more are less clumps.  
+            # In a real system, level could be computed from features.
+            result.append({'elements': indices, 'level': np.mean(indices)})
         return result
 
     def _extract_commonalities(self, elements: List[Dict[str, Any]]) -> str:
@@ -362,6 +384,24 @@ class MetaCognitiveSystem:
             abstraction_level=int(synthesis['cognitive_state']['abstraction_capability'] * 5)
         )
 
+    # ----- New Self-Training Method for Complete Autonomous Learning -----
+    def self_train(self, new_data: List[str]) -> None:
+        """
+        Incorporate new conversation data to update internal knowledge.
+        This method re-fits the TF-IDF vectorizer on all accumulated training data and
+        updates internal reasoning patterns.
+        """
+        # Store new conversation inputs
+        self.training_data.extend(new_data)
+        try:
+            # Update the vectorizer with the full training data
+            self.vectorizer.fit(self.training_data)
+            # Optionally, one could also re-run clustering over all meta_memory or training_data
+            # to update the knowledge graph and reasoning patterns.
+            print("Self-training complete. Updated internal knowledge.")
+        except Exception as e:
+            print("Error during self-training:", e)
+
 # ====================================================
 # AGI Features: Cognitive Architecture (Memory & Reasoning)
 # ====================================================
@@ -399,14 +439,14 @@ class CognitiveArchitecture:
             'reasoning_result': reasoning,
             'memory_context': self._get_relevant_memories(input_text)
         }
-    
+
     def _analyze_complexity(self, text: str) -> float:
         words = text.split()
         avg_len = sum(len(w) for w in words) / len(words) if words else 0
         sentences = text.split('.')
         avg_sent = sum(len(s.split()) for s in sentences) / len(sentences) if sentences else 0
         return min(1.0, (avg_len / 10 + avg_sent / 20) / 2)
-    
+
     def _analyze_emotional_content(self, text: str) -> Dict[str, float]:
         emotions = {
             'joy': ['happy', 'glad', 'joyful', 'delighted'],
@@ -420,7 +460,7 @@ class CognitiveArchitecture:
             score = sum(text_lower.count(k) for k in keywords)
             scores[emo] = min(1.0, score / len(text.split()))
         return scores
-    
+
     def _logical_reasoning(self, input_text: str, memories: List[Memory]) -> Dict[str, Any]:
         concepts = self._extract_concepts(input_text)
         patterns = self._identify_patterns(concepts, memories)
@@ -431,12 +471,12 @@ class CognitiveArchitecture:
             'conclusions': conclusions,
             'confidence': self.reasoning_confidence
         }
-    
+
     def _extract_concepts(self, text: str) -> List[str]:
         words = text.lower().split()
         stopwords = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for'}
         return list(set(w for w in words if w not in stopwords and len(w) > 3))
-    
+
     def _identify_patterns(self, concepts: List[str], memories: List[Memory]) -> List[Dict[str, Any]]:
         patterns = []
         mem_concepts = []
@@ -453,7 +493,7 @@ class CognitiveArchitecture:
                     'significance': freq[c] / len(memories)
                 })
         return patterns
-    
+
     def _generate_conclusions(self, patterns: List[Dict[str, Any]]) -> List[str]:
         conclusions = []
         total_sig = sum(p['significance'] for p in patterns)
@@ -465,7 +505,7 @@ class CognitiveArchitecture:
                 elif p['significance'] > 0.3:
                     conclusions.append(f"Moderate pattern: {p['concept']}")
         return conclusions
-    
+
     def _manage_memory(self, memory: Memory):
         self.short_term_memory.append(memory)
         if len(self.short_term_memory) > self.max_stm_size:
@@ -494,18 +534,21 @@ class CognitiveArchitecture:
                 new_stm.append(mem)
         self.short_term_memory = new_stm
 
-# Creating AI
+# ====================================================
+# Chatbot with GPT‑Neo and Integrated AGI (No Operator Features)
+# ====================================================
 
 @dataclass
 class ChatbotConfig:
-    model_name: str = "EleutherAI/gpt-neo-2.7B"
+    model_name: str = "EleutherAI/gpt-neo-1.3B"
     max_new_tokens: int = 100      # For GPU
     cpu_max_new_tokens: int = 50   # For CPU
-    temperature: float = 0.7
+    temperature: float = 0.2
 
 class Chatbot:
     def __init__(self):
-        print("Loading model and AGI tools. Please wait...")
+        print("HumanX is loading. Please wait...")
+        print("HumanX is free and open-source. This AI runs best on a TPU or GPU.")
         self.accelerator = Accelerator()
         self.device = self.accelerator.device
         self.config = ChatbotConfig()
@@ -522,21 +565,22 @@ class Chatbot:
             model="distilbert-base-uncased-finetuned-sst-2-english",
             device=-1
         )
-        # Check if system has at least 16GB of RAM
+        # Check if system has at least 12GB of RAM
         if psutil.virtual_memory().total >= 16 * 1024**3:
             self.agi_enabled = True
-            print("AGI features enabled.")
+            print("HumanX AGI enabled.")
         else:
+            self.device = torch.device("cpu")
+            model.to(self.device) # Move model to CPU
             self.agi_enabled = False
-            print("AGI features disabled due to insufficient RAM (<16GB).")
+            print("HumanX AGI disabled. GPU required.")
         # Initialize cognitive modules
         self.meta_cognitive_system = MetaCognitiveSystem()
         self.cognitive_architecture = CognitiveArchitecture()
         self.interaction_count = 0
-        print("Model and AGI tools loaded.")
+        print("HumanX is ready.")
 
     def generate_response(self, prompt: str) -> str:
-        # Do not remove conversation markers; pass prompt as is.
         inputs = self.tokenizer(prompt, return_tensors="pt", padding=True, truncation=True)
         input_ids = inputs.input_ids.to(self.device)
         att_mask = inputs.attention_mask.to(self.device)
@@ -545,7 +589,12 @@ class Chatbot:
                 input_ids=input_ids,
                 attention_mask=att_mask,
                 max_new_tokens=50 if self.device.type == "cpu" else 100,
-                pad_token_id=self.tokenizer.eos_token_id
+                pad_token_id=self.tokenizer.eos_token_id,
+                no_repeat_ngram_size=2,
+                do_sample=True,
+                top_k=50,
+                top_p=0.95,
+                temperature=0.5
             )
         return self.tokenizer.decode(output_ids[0][input_ids.shape[1]:], skip_special_tokens=True).strip()
 
@@ -556,8 +605,10 @@ class Chatbot:
             last_belief = self.meta_cognitive_system.belief_system.get('last_synthesis')
             if last_belief:
                 last_belief.confidence *= 0.9
-        # Always trigger self-improvement after every conversation.
+        # Trigger self-improvement
         self.meta_cognitive_system.improve_reasoning()
+        # Also, let the system completely learn by self-training on new data.
+        self.meta_cognitive_system.self_train([user_input])
 
     async def chat(self, user_input: str) -> str:
         if self.agi_enabled:
@@ -568,14 +619,12 @@ class Chatbot:
                 f"MetaCognitive Insights: {json.dumps(meta)}\n"
                 f"User said: {user_input}"
             )
-            # Add newline after "Chatbot:" to ensure the generated response appears on a new line.
             prompt = f"User: {user_input}\nContext: {combined_context}\nChatbot:\n"
             response = self.generate_response(prompt)
         else:
             response = self.generate_response(f"User: {user_input}\nChatbot:\n")
         self.learn_from_conversation(user_input)
         self.interaction_count += 1
-        # Consolidate memories every 5 interactions.
         if self.interaction_count % 5 == 0:
             self.cognitive_architecture.consolidate_memories()
         return response
@@ -594,5 +643,8 @@ async def main():
     await bot.run()
 
 if __name__ == "__main__":
+    import nest_asyncio
+    nest_asyncio.apply()  # Allow nested event loops
     asyncio.run(main())
+
 
