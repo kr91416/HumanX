@@ -34,9 +34,8 @@ warnings.filterwarnings("ignore", category=UserWarning)
 logging.basicConfig(level=logging.ERROR)
 torch.set_num_threads(16)
 
-# ====================================================
-# AGI Features: MetaCognitive System (Learning & Reasoning)
-# ====================================================
+# AGI features start here
+# thought analysis & beliefs
 
 class ThoughtLevel(Enum):
     REFLEXIVE = 1    # Immediate responses
@@ -368,9 +367,7 @@ class MetaCognitiveSystem:
             abstraction_level=int(synthesis['cognitive_state']['abstraction_capability'] * 5)
         )
 
-# ====================================================
-# AGI Features: Cognitive Architecture (Memory & Reasoning)
-# ====================================================
+# memories
 
 @dataclass
 class Memory:
@@ -501,16 +498,14 @@ class CognitiveArchitecture:
                 new_stm.append(mem)
         self.short_term_memory = new_stm
 
-# ====================================================
-# Chatbot with GPT‑Neo and Integrated AGI (No Operator Features)
-# ====================================================
+# GPT config
 
 @dataclass
 class ChatbotConfig:
     model_name: str = "EleutherAI/gpt-neo-2.7B"
     max_new_tokens: int = 100      # For GPU
     cpu_max_new_tokens: int = 50   # For CPU
-    temperature: float = 0.7
+    temperature: float = 0.3
 
 class Chatbot:
     def __init__(self):
