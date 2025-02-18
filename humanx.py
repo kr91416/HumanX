@@ -35,9 +35,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 logging.basicConfig(level=logging.ERROR)
 torch.set_num_threads(16)
 
-# ====================================================
-# AGI Features: MetaCognitive System (Learning & Reasoning)
-# ====================================================
+# Meta-Cognitive thought (memories & thoughts)
 
 class ThoughtLevel(Enum):
     REFLEXIVE = 1    # Immediate responses
@@ -384,27 +382,23 @@ class MetaCognitiveSystem:
             abstraction_level=int(synthesis['cognitive_state']['abstraction_capability'] * 5)
         )
 
-    # ----- New Self-Training Method for Complete Autonomous Learning -----
+    # ----- CAL self-training -----
     def self_train(self, new_data: List[str]) -> None:
         """
-        Incorporate new conversation data to update internal knowledge.
-        This method re-fits the TF-IDF vectorizer on all accumulated training data and
-        updates internal reasoning patterns.
+        Update internal knowledge based on 
+        already existing converation data. 
         """
         # Store new conversation inputs
         self.training_data.extend(new_data)
         try:
             # Update the vectorizer with the full training data
             self.vectorizer.fit(self.training_data)
-            # Optionally, one could also re-run clustering over all meta_memory or training_data
-            # to update the knowledge graph and reasoning patterns.
+            # Optionally, you could also re-run clustering over all meta_memory or training_data
             print("Self-training complete. Updated internal knowledge.")
         except Exception as e:
             print("Error during self-training:", e)
 
-# ====================================================
-# AGI Features: Cognitive Architecture (Memory & Reasoning)
-# ====================================================
+# brain of the AI
 
 @dataclass
 class Memory:
@@ -534,9 +528,7 @@ class CognitiveArchitecture:
                 new_stm.append(mem)
         self.short_term_memory = new_stm
 
-# ====================================================
-# Chatbot with GPT‑Neo and Integrated AGI (No Operator Features)
-# ====================================================
+# AGI enabled
 
 @dataclass
 class ChatbotConfig:
@@ -565,7 +557,7 @@ class Chatbot:
             model="distilbert-base-uncased-finetuned-sst-2-english",
             device=-1
         )
-        # Check if system has at least 12GB of RAM
+        # Check if system has at least 16GB of RAM
         if psutil.virtual_memory().total >= 16 * 1024**3:
             self.agi_enabled = True
             print("HumanX AGI enabled.")
@@ -573,7 +565,7 @@ class Chatbot:
             self.device = torch.device("cpu")
             model.to(self.device) # Move model to CPU
             self.agi_enabled = False
-            print("HumanX AGI disabled. GPU required.")
+            print("HumanX AGI disabled.")
         # Initialize cognitive modules
         self.meta_cognitive_system = MetaCognitiveSystem()
         self.cognitive_architecture = CognitiveArchitecture()
